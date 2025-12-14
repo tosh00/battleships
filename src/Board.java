@@ -5,7 +5,7 @@ public class Board {
     private final int width;
     private final int height;
     private final List<SeaObject> seaObjects = new ArrayList<SeaObject>();
-    private  final List<Coordinates> shots = new ArrayList<Coordinates>();
+    private final List<Coordinates> shots = new ArrayList<Coordinates>();
 
     private final char[][] board;
 
@@ -82,12 +82,26 @@ public class Board {
         }
     }
 
+    private boolean checkIfCoordinatesShooted(Coordinates c) {
+        for (Coordinates s : shots) {
+            if (s == c) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String displayBoard(boolean fogOfWar) {
         this.updateBoard(fogOfWar);
         StringBuilder result = new StringBuilder();
         for (int y = 0; y < this.height; y++) {
             for (int x = 0; x < this.width; x++) {
-                result.append("[").append(board[x][y]).append("]");
+                if (checkIfCoordinatesShooted(new Coordinates(x, y))) {
+                    result.append("{").append(board[x][y]).append("}");
+                    System.out.println("jest");
+                } else {
+                    result.append("[").append(board[x][y]).append("]");
+                }
             }
             result.append("\n");
         }
@@ -95,8 +109,8 @@ public class Board {
         return result.toString();
     }
 
-    public void shot(Coordinates c) {
-        for(Coordinates shot: this.shots) {
+    public void shot(Coordinates c) throws CoordinatesAlreadyUsedException {
+        for (Coordinates shot : this.shots) {
             if (shot.equals(c)) {
                 throw new CoordinatesAlreadyUsedException(shot);
             }
@@ -104,10 +118,10 @@ public class Board {
         shots.add(c);
     }
 
-    public boolean checkIfAnyShipLeft(){
-        for(SeaObject s: this.seaObjects){
-            for(Coordinates c : s.getCoordinates()){
-                if(!this.shots.contains(c)){
+    public boolean checkIfAnyShipLeft() {
+        for (SeaObject s : this.seaObjects) {
+            for (Coordinates c : s.getCoordinates()) {
+                if (!this.shots.contains(c)) {
                     return true;
                 }
             }

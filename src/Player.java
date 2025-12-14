@@ -3,6 +3,7 @@ import java.util.Random;
 public class Player {
     private Board board;
     public String playerName;
+
     Player(String playerName) {
         this.playerName = playerName;
     }
@@ -19,7 +20,17 @@ public class Player {
         Random rand = new Random();
         for (int i = 0; i < 100; i++) {
             boolean direction = rand.nextBoolean();
-            Coordinates c = new Coordinates(rand.nextInt(this.getBoard().getWidth() - (direction ? shipLength : 0)), rand.nextInt(this.getBoard().getHeight()- (!direction ? shipLength : 0)));
+            if(shipLength > this.getBoard().getWidth()) direction = false;
+            if(shipLength > this.getBoard().getHeight()) direction = true;
+
+            if(shipLength > this.getBoard().getWidth() && shipLength > this.getBoard().getHeight()){
+                throw new Exception("Ship length exceeds board dimensions");
+            }
+
+            int x = this.getBoard().getWidth() - (direction ? (shipLength - 1) : 0);
+            int y = this.getBoard().getHeight() - (!direction ? (shipLength - 1) : 0);
+
+            Coordinates c = new Coordinates(rand.nextInt(x), rand.nextInt(y));
             try {
                 Ship s = new Ship(shipLength, direction, c);
                 this.getBoard().placeShip(s);
