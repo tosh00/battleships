@@ -1,10 +1,10 @@
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HumanPlayerTest {
 
@@ -18,11 +18,11 @@ public class HumanPlayerTest {
     @Test
     public void testPromptSingleShipValidInputHorizontal() {
         // Arrange
-        HumanPlayer player = new HumanPlayer("TestPlayer");
-        player.initiateBoard(10, 10);
         String simulatedInput = "3,4,H\n";
         InputStream stdin = System.in;
         System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
 
         try {
             // Act
@@ -39,11 +39,11 @@ public class HumanPlayerTest {
     @Test
     public void testPromptSingleShipValidInputVertical() {
         // Arrange
-        HumanPlayer player = new HumanPlayer("TestPlayer");
-        player.initiateBoard(10, 10);
         String simulatedInput = "5,6,V\n";
         InputStream stdin = System.in;
         System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
 
         try {
             // Act
@@ -81,14 +81,12 @@ public class HumanPlayerTest {
     @Test
     public void testPromptSingleShipCollision() {
         // Arrange
-        HumanPlayer player = new HumanPlayer("TestPlayer");
-        player.initiateBoard(10, 10);
-        String initialInput = "2,2,H\n";
-        String simulatedInput = "2,2,H\n"; // This ship will collide with the first one.
+        String initialInput = "2,2,H\n2,2,H\n";
         InputStream stdin = System.in;
         System.setIn(new ByteArrayInputStream(initialInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
         player.promptSingleShip(3); // Place the first ship.
-        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
 
         try {
             // Act
@@ -104,11 +102,11 @@ public class HumanPlayerTest {
     @Test
     public void testPromptSingleShipInvalidFormat() {
         // Arrange
-        HumanPlayer player = new HumanPlayer("TestPlayer");
-        player.initiateBoard(10, 10);
-        String simulatedInput = "invalid,input\n";
+        String simulatedInput = "Invalid,input\n";
         InputStream stdin = System.in;
         System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
 
         try {
             // Act
@@ -141,5 +139,116 @@ public class HumanPlayerTest {
         } finally {
             System.setIn(stdin);
         }
+    }
+
+    @Test
+    public void testPlaceShipsValidInputs() {
+        // Arrange
+        int[] ships = {3, 4, 2};
+        String simulatedInput = "0,0,H\n3,3,V\n5,5,H\n"; // Valid inputs for placing all ships
+        InputStream stdin = System.in;
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+
+        try {
+            // Act
+            player.placeShips(ships);
+
+            // Assert
+            assertTrue(player.getBoard().checkIfAnyShipLeft(),
+                    "Expected ships to be placed successfully.");
+        } finally {
+            System.setIn(stdin);
+        }
+    }
+
+    @Test
+    public void testPlaceShipsWithInvalidInputRetry() {
+        // Arrange
+        int[] ships = {4};
+        String simulatedInput = "-10,-10,V\n20,20,H\n5,5,H\n"; // Retry with valid input
+        InputStream stdin = System.in;
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+
+        try {
+
+            // Act
+            player.placeShips(ships);
+
+            // Assert
+            assertTrue(player.getBoard().checkIfAnyShipLeft(),
+                    "Expected ship to be placed after retry with valid input.");
+        } finally {
+            System.setIn(stdin);
+        }
+    }
+
+    @Test
+    public void testPlaceShipsPreventCollisions() {
+        // Arrange
+        int[] ships = {3, 3};
+        String simulatedInput = "1,1,H\n1,1,H\n4,4,V\n"; // Second placement collides, retries
+        InputStream stdin = System.in;
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+
+        try {
+            // Act
+            player.placeShips(ships);
+
+            // Assert
+            assertTrue(player.getBoard().checkIfAnyShipLeft(),
+                    "Expected both ships to be placed, avoiding collision.");
+        } finally {
+            System.setIn(stdin);
+        }
+    }
+
+    @Test
+    public void testPromptShot() {
+        Board mockBoard = mock(Board.class);
+
+        String simulatedInput = "0,0";
+
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+        player.promptShot(mockBoard);
+
+        verify(mockBoard, times(1)).shot(new Coordinates(0, 0));
+    }
+
+    @Test
+    public void testPromptMines() {
+        Board mockBoard = new Board(10, 10);
+
+        String simulatedInput = "0,0\n1,1\n";
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+
+        player.promptPlaceMines(mockBoard);
+        player.promptPlaceMines(mockBoard);
+
+        assertEquals(2, mockBoard.getMines().size());
+    }
+
+    @Test
+    public void testPromptRaft() {
+
+        String simulatedInput = "0,0\n1,1\n";
+        int[] rafts = {2, 2};
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        HumanPlayer player = new HumanPlayer("TestPlayer");
+        player.initiateBoard(10, 10);
+
+        player.placeRafts(rafts);
+
+        assertEquals(1, player.getBoard().getShips().size());
     }
 }

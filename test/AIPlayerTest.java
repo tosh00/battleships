@@ -1,6 +1,9 @@
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.function.Try;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 public class AIPlayerTest {
@@ -13,7 +16,7 @@ public class AIPlayerTest {
      */
 
     @RepeatedTest(100)
-    public void testShootAtRandomWithEmptyBoard() throws Exception {
+    public void testShootAtRandomWithEmptyBoard(){
         // Arrange
         AIPlayer aiPlayer = new AIPlayer();
         Board mockBoard = mock(Board.class);
@@ -28,7 +31,7 @@ public class AIPlayerTest {
     }
 
     @RepeatedTest(100)
-    public void testShootAtRandomWithRetryAfterException() throws Exception {
+    public void testShootAtRandomWithRetryAfterException(){
         // Arrange
         AIPlayer aiPlayer = new AIPlayer();
         Board mockBoard = mock(Board.class);
@@ -65,7 +68,7 @@ public class AIPlayerTest {
     }
 
     @RepeatedTest(100)
-    public void testShootAtRandomHandlesMultipleExceptions() throws Exception {
+    public void testShootAtRandomHandlesMultipleExceptions() {
         // Arrange
         AIPlayer aiPlayer = new AIPlayer();
         Board mockBoard = mock(Board.class);
@@ -83,5 +86,18 @@ public class AIPlayerTest {
 
         // Assert
         verify(mockBoard, times(3)).shot(any(Coordinates.class));
+    }
+
+    @Test
+    public void testPlaceRafts() {
+        AIPlayer aiPlayer = new AIPlayer();
+        aiPlayer.initiateBoard(10, 10);
+        int[] rafts = {2, 2};
+        try{
+            aiPlayer.placeRafts(rafts);
+        } catch(Exception e){
+            fail("Unexpected exception: " + e.getMessage());
+        }
+        assertEquals(2, aiPlayer.getBoard().getShips().size());
     }
 }

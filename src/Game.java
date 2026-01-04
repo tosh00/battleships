@@ -3,7 +3,10 @@ public class Game {
     private final AIPlayer opponent;
 
     private int boardSize = 10;
-    private final int[] ships = {5, 4, 3, 2, 2, 1, 1};
+//    private final int[] ships = {5, 4, 3, 2, 2, 1, 1};
+private final int[] ships = {3, 2, 1};
+    private final int[] rafts = {2};
+
 
     Game(String playerName) {
         player = new HumanPlayer(playerName);
@@ -18,12 +21,21 @@ public class Game {
 
     public void displayBoards() {
         System.out.println(player.getBoard().displayBoard(false));
-        System.out.println(opponent.getBoard().displayBoard(true));
+        System.out.println(opponent.getBoard().displayBoard(false));
     }
 
     public void startGame() throws Exception {
-        player.initiateBoard(this.boardSize, this.boardSize);
         opponent.initiateBoard(this.boardSize, this.boardSize);
+        player.initiateBoard(this.boardSize, this.boardSize);
+
+        opponent.placeMineAtRandom(player.getBoard());
+        player.promptPlaceMine(opponent.getBoard());
+
+        displayBoards();
+
+        opponent.placeRafts(rafts);
+        player.placeRafts(rafts);
+
         opponent.placeShips(ships);
         player.placeShips(ships);
 

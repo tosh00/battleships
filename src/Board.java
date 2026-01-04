@@ -1,11 +1,12 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Board {
     private final int width;
     private final int height;
-    private final List<SeaObject> seaObjects = new ArrayList<SeaObject>();
-    private final List<Coordinates> shots = new ArrayList<Coordinates>();
+    private final List<SeaObject> seaObjects = new ArrayList<>();
+    private final List<Coordinates> shots = new ArrayList<>();
 
     private final char[][] board;
 
@@ -23,14 +24,22 @@ public class Board {
         return height;
     }
 
+    public List<BattleShip> getShips() {
+        return seaObjects.stream().filter(s -> s instanceof BattleShip).map(s -> (BattleShip) s).toList();
+    }
+
+    public List<SeaMine> getMines() {
+        return seaObjects.stream().filter(s -> s instanceof SeaMine).map(s -> (SeaMine) s).toList();
+    }
+
     private boolean checkIfCoordinateInBounds(Coordinates c) {
         return c.x >= this.width || c.x < 0 || c.y >= this.height || c.y < 0;
     }
 
     private boolean checkIfCollides(Coordinates c) {
-        for (SeaObject s : this.seaObjects) {
+        for (SeaObject s : this.getShips()) {
             for (Coordinates seaObjectCoordinate : s.getCoordinates()) {
-                if (seaObjectCoordinate.equals(c)) {
+                if (seaObjectCoordinate.equals(c) && !(s.getClass() == SeaMine.class)) {
                     return true;
                 }
             }
@@ -38,8 +47,19 @@ public class Board {
         return false;
     }
 
-    public void placeShip(Ship ship) {
-        for (Coordinates c : ship.getCoordinates()) {
+    private boolean checkIfCollidesWithMine(BattleShip battleShip){
+        for (Coordinates c : battleShip.getCoordinates()) {
+            for (SeaObject s : this.seaObjects) {
+                if (s.getClass() == SeaMine.class && (Arrays.asList(s.getCoordinates()).contains(c))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void placeShip(BattleShip battleShip) {
+        for (Coordinates c : battleShip.getCoordinates()) {
             if (checkIfCoordinateInBounds(c)) {
                 throw new CoordinatesOutOfBoundException(c);
             }
@@ -47,7 +67,11 @@ public class Board {
                 throw new CoordinatesAlreadyOcupiedException(c);
             }
         }
-        this.seaObjects.add(ship);
+        this.seaObjects.add(battleShip);
+        if(checkIfCollidesWithMine(battleShip)){
+            battleShip.sunk = true;
+            this.shots.addAll(Arrays.asList(battleShip.getCoordinates()));
+        }
     }
 
     public boolean placeMine(SeaMine seaMine) {
@@ -67,7 +91,7 @@ public class Board {
             }
         }
         if (!fogOfWar) {
-            for (SeaObject s : this.seaObjects) {
+            for (SeaObject s : this.getShips()) {
                 for (Coordinates c : s.getCoordinates()) {
                     board[c.x][c.y] = s.getDisplaySymbol();
                 }
@@ -116,10 +140,25 @@ public class Board {
             }
         }
         shots.add(c);
+        if(checkShipsSunk()){
+            System.out.println("You sunk a ship!");
+        }
+    }
+
+    private boolean checkShipsSunk() {
+        for (SeaObject s : this.getShips()) {
+            if (this.shots.containsAll(List.of(s.getCoordinates()))) {
+                if (s instanceof BattleShip) {
+                    ((BattleShip) s).sunk = true;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public boolean checkIfAnyShipLeft() {
-        for (SeaObject s : this.seaObjects) {
+        for (SeaObject s : this.getShips()) {
             for (Coordinates c : s.getCoordinates()) {
                 if (!this.shots.contains(c)) {
                     return true;

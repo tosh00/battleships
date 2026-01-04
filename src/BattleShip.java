@@ -1,6 +1,7 @@
-public class Ship extends SeaObject {
+public class BattleShip extends SeaObject {
     public final int length;
     public final boolean direction;
+    public boolean sunk = false;
 
     public static char findSymbol(int length) {
         char symbol = ' ';
@@ -26,7 +27,7 @@ public class Ship extends SeaObject {
         return symbol;
     }
 
-    Ship(int length, boolean direction, Coordinates coordinates) {
+    BattleShip(int length, boolean direction, Coordinates coordinates) {
         super(coordinates);
         this.length = length;
         this.direction = direction;

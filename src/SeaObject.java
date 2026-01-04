@@ -1,4 +1,4 @@
-public class SeaObject {
+public abstract class SeaObject {
     public final Coordinates coordinates;
     private char displaySymbol;
     SeaObject(Coordinates coordinates,  char displaySymbol) {
